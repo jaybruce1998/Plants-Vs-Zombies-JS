@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PvZ</title>
+    <style>
+        /* Basic styling for the grid container */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(9, 50px); /* 9 columns */
+            grid-template-rows: repeat(5, 50px);    /* 5 rows */
+            gap: 2px;  /* Gap between grid cells */
+            margin: 20px auto;
+            width: fit-content;
+            background-color: #333;
+            position: relative; /* To contain absolute-positioned suns */
+        }
+        .grid-item {
+            width: 50px;
+            height: 50px;
+            background-color: #fff; /* Default white, will be changed by JS */
+            position: relative;
+            cursor: pointer;
+        }
+        /* Sun styling */
+        .sun {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: yellow;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+        }
+        .bullet {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: green;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+			pointer-events: none;
+        }
+        /* Sun count display */
+        #sun-count {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+		.plant-buttons-container {
+			display: flex;
+			justify-content: center;
+			position: relative;
+			right: 300px
+		}
+
+		/* Plant buttons container */
+		.plant-buttons {
+			position: absolute;
+			top: 10px; /* Adjust top position to align with the grid */
+			display: flex;
+			flex-direction: column; /* Stack buttons vertically */
+			gap: 10px; /* Space between buttons */
+			overflow-y: auto; /* Scroll if more buttons are added in the future */
+		}
+        .plant-button {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 10px;
+            border: 2px solid #333;
+            cursor: pointer;
+        }
+        .selected {
+            border: 3px solid red; /* Highlight selected button */
+        }
+		.zombie {
+			position: absolute;
+			width: 50px; /* Adjust size */
+			height: 50px;
+			z-index: 10; /* Ensure zombies appear on top */
+			pointer-events: none; /* Allows clicks to pass through */
+		}
+
+    </style>
+</head>
+<body>
+    <!-- Sun count display -->
+    <div id="sun-count">Sun: 50</div>
+
+    <!-- Plant selection buttons -->
+	
+    <div class="plant-buttons-container">
+		<div class="plant-buttons">
+			50<img src="sunflower.png" id="sunflower-button" class="plant-button"/>
+			100<img src="peashooter.png" id="peashooter-button" class="plant-button"/>
+			150<img src="cherrybomb.png" id="cherrybomb-button" class="plant-button"/>
+			50<img src="wallnut.png" id="wallnut-button" class="plant-button"/>
+			25<img src="potatomine.png" id="potatomine-button" class="plant-button"/>
+			175<img src="snowpea.png" id="snowpea-button" class="plant-button"/>
+			150<img src="chomper.png" id="chomper-button" class="plant-button"/>
+			200<img src="repeater.png" id="repeater-button" class="plant-button"/>
+		</div>
+	</div>
+    
+    <!-- Grid container -->
+    <div class="grid-container" id="grid"></div>
+	<script src="Plant.js"></script>
+	<script src="Zombie.js"></script>
+	<script src="Bullet.js"></script>
+	<script src="main.js"></script>
+</body>
+</html>
