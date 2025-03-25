@@ -4,13 +4,22 @@ const pumpkins = [[], [], [], [], []];
 let zombies = [];
 let bullets=[];
 const grid = document.getElementById('grid');
-const plantButtons = document.querySelectorAll('.plant-button');
+const availablePlants=document.getElementById("availablePlants");
+const plantButtons=document.getElementById("plantButtons");
+const sunCountDisplay=document.getElementById("sun-count");
+const startButton=document.getElementById("startButton");
+let plantButtonList=[];
+let pickedPlants;
 let sunCount = 50;
 let selectedPlant = null;
 let plantCost = 0;
 let night;
 let water;
 let roof;
+let picking=true;
+let numSeeds;
+let numChosen;
+let spawnInterval;
 
 function spawnZombie() {
 	const row = Math.floor(Math.random() * plants.length); // Random row
@@ -29,14 +38,12 @@ function updateZombies() {
 	});
 }
 
-// Function to draw zombies on the grid
 function drawZombies() {
 	grid.querySelectorAll('.zombie').forEach(zombie => zombie.remove());
 
 	zombies.forEach(zombie => zombie.draw());
 }
 
-// Function to generate a new sun directly on top of the plant
 function generateSunOnPlant(x, y, amount) {
 	const sun = {
 		x: x + 25,
@@ -96,7 +103,7 @@ function placePlant(row, col, gridItem) {
 		if(sunCount>124&&!pumpkins[row][col])
 		{
 			sunCount -= 125;
-			document.getElementById('sun-count').textContent = `Sun: ${sunCount}`;
+			sunCountDisplay.textContent = `Sun: ${sunCount}`;
 			pumpkins[row][col]=72;
 			selectedPlant = null;
 			plantCost = 0;
@@ -107,7 +114,7 @@ function placePlant(row, col, gridItem) {
 	if (!plants[row][col]&&sunCount >= plantCost) {
 		gridItem.src = `${selectedPlant}.png`;
 		sunCount -= plantCost;
-		document.getElementById('sun-count').textContent = `Sun: ${sunCount}`;
+		sunCountDisplay.textContent = `Sun: ${sunCount}`;
 
 		const newPlant = new Plant(row, col, col * 52, row * 52, selectedPlant);
 		plants[row][col]=newPlant;
@@ -126,7 +133,7 @@ function selectPlant(plant, cost) {
 }
 
 function deselectPlantButton() {
-	plantButtons.forEach(button => button.classList.remove('selected'));
+	plantButtonList.forEach(button => button.classList.remove('selected'));
 }
 
 const gridImages=[[], [], [], [], [], []];
@@ -159,13 +166,34 @@ function getZombies()
 	return wave==levelWaves[level]||wave%10==0?r*2.5:r;
 }
 
-function startZombieSpawning() {
-	const spawnInterval=setInterval(() => {
-		for(let i=getZombies(); i>0; i--)
-			spawnZombie();
-		if(++wave>levelWaves[level])
-			clearInterval(spawnInterval);
-	}, 24000);
+function startSpawningZombies() {
+	if(numChosen==numSeeds)
+	{
+		picking=false;
+		[...availablePlants.getElementsByTagName("img")].forEach(plant=>plant.remove());
+		availablePlants.style.display="none";
+		startButton.style.display="none";
+		plantButtonList.forEach(plant=>{
+			const n=plant.src.split("/");
+			const name=n[n.length-1].split(".")[0];
+			plant.id=name+"-button";
+			plant.onclick=()=>selectPlant(name, plantMap[name]);
+		});
+		if(!night)
+			sunInterval=setInterval(() => {
+				generateRandomSun();
+			}, 9500);
+		spawnInterval=setInterval(() => {
+			for(let i=getZombies(); i>0; i--)
+				spawnZombie();
+			if(++wave>levelWaves[level])
+				clearInterval(spawnInterval);
+		}, 24000);
+		suns=[];
+		sunCount=50;
+		sunCountDisplay.textContent = "Sun: 50";
+		gameLoop();
+	}
 }
 
 function zombieInRange(plant)
@@ -181,6 +209,16 @@ function explode(damage, r1, c1, r2, c2)
 		if(zombie.row>=r1&&zombie.row<=r2&&c>=c1&&c<=c2)
 			zombie.health-=damage;
 	});
+}
+
+function removeSeed(i)
+{
+	if(i>=numChosen)
+		return;
+	pickedPlants[plantButtonList[i].src]=false;
+	for(i++; i<numChosen; i++)
+		plantButtonList[i-1].src=plantButtonList[i].src;
+	plantButtonList[--numChosen].src="";
 }
 
 function resetGrid()
@@ -206,21 +244,38 @@ function resetGrid()
 			gridImages[5][j].style.backgroundColor=getRandomGreenShade();
 		else
 			gridImages[5][j].style.display="none";
-	suns=[];
-	sunCount=50;
-	document.getElementById('sun-count').textContent = `Sun: ${sunCount}`;
-	if(!night)
-		sunInterval=setInterval(() => {
-			generateRandomSun();
-		}, 9500);
-	startZombieSpawning();
+	picking=true;
+	pickedPlants={};
+	let ind=0;
+	while(ind<3)
+		addOption(plantNames[ind], 0, ind++);
+	for(let i=3; i<=level; i++)
+	{
+		const c=i%10;
+		if(c!=4&&c!=9)
+			addOption(plantNames[ind++], Math.floor(i/10), c>4?c-1:c);
+	}
+	numSeeds=Math.min(availablePlants.getElementsByTagName("img").length, 6+Math.floor(level/15));
+	numChosen=0;
+	for(let i=0; i<numSeeds; i++)
+	{
+		const gridItem = document.createElement('img');
+		gridItem.classList.add('plant-button');
+		gridItem.setAttribute('data-row', i);
+		gridItem.onclick=() => removeSeed(i);
+		plantButtons.appendChild(gridItem);
+	}
+	plantButtonList.forEach(plant=>plant.remove());
+	plantButtonList=[...plantButtons.getElementsByTagName("img")];
+	availablePlants.style.display="";
+	startButton.style.display="";
 }
 
 function gameLoop() {
 	suns.forEach((sun, index) => {
 		if (sun.isHovered) {
 			sunCount += sun.amount;
-			document.getElementById('sun-count').textContent = `Sun: ${sunCount}`;
+			sunCountDisplay.textContent = `Sun: ${sunCount}`;
 			suns.splice(index, 1);
 		}
 	});
@@ -265,17 +320,51 @@ function gameLoop() {
 	}
 	requestAnimationFrame(gameLoop);
 }
-const plantNames=['sunflower', 'peashooter', 'cherrybomb', 'wallnut', 'potatomine', 'snowpea', 'chomper', 'repeater',
-				'puffshroom', 'sunshroom', 'fumeshroom', 'gravebuster', 'hypnoshroom', 'scaredyshroom', 'iceshroom', 'doomshroom',
-				'lilypad', 'squash', 'threepeater', 'tanglekelp', 'jalapeno', 'spikeweed', 'torchwood', 'tallnut',
-				'seashroom', 'plantern', 'cactus', 'blover', 'splitpea', 'starfruit', 'pumpkin', 'magnetshroom',
-				'cabbagepult', 'flowerpot', 'kernelpult', 'coffeebean', 'garlic', 'umbrellaleaf'];
-const prices=[50, 100, 150, 50, 25, 175, 150, 200,
-				0, 25, 75, 75, 75, 25, 5, 125,
+
+document.addEventListener("contextmenu", function (event) {
+    event.preventDefault(); // Prevents the default right-click menu
+    let c = Math.floor((event.clientX-grid.offsetLeft) / 52);
+    let r = Math.floor((event.clientY-grid.offsetTop) / 52);
+	if(r>=0&&r<plants.length&&plants[r][c])
+	{
+		plants[r][c].health=0;
+		plants[r][c]=null;
+		gridImages[r][c].src="";
+	}
+});
+
+function choosePlant(name)
+{
+	if(numChosen<numSeeds&&!pickedPlants[name])
+	{
+		pickedPlants[name]=true;
+		plantButtonList[numChosen++].src=name;
+	}
+}
+
+function addOption(name, row, col)
+{
+	const gridItem = document.createElement('img');
+	gridItem.classList.add('grid-item');
+	gridItem.setAttribute('data-row', row);
+	gridItem.setAttribute('data-col', col);
+	gridItem.src=name+".png";
+	gridItem.onclick=()=>choosePlant(gridItem.src);
+	availablePlants.appendChild(gridItem);
+}
+
+const plantNames=['sunflower', 'peashooter', 'wallnut', 'cherrybomb', 'potatomine', 'snowpea', 'chomper', 'repeater',
+					'puffshroom', 'sunshroom', 'fumeshroom', 'gravebuster', 'hypnoshroom', 'scaredyshroom', 'iceshroom', 'doomshroom',
+					'lilypad', 'squash', 'threepeater', 'tanglekelp', 'jalapeno', 'spikeweed', 'torchwood', 'tallnut',
+					'seashroom', 'plantern', 'cactus', 'blover', 'splitpea', 'starfruit', 'pumpkin', 'magnetshroom',
+					'cabbagepult', 'flowerpot', 'kernelpult', 'coffeebean', 'garlic', 'umbrellaleaf'];
+const prices=[50, 100, 50, 150, 25, 175, 150, 200,
+				0, 25, 75, 75, 75, 25, 125, 125,
 				25, 50, 325, 25, 125, 100, 175, 125,
 				0, 25, 125, 100, 125, 125, 125, 100,
 				100, 25, 100, 75, 50, 100];
-[...document.getElementsByClassName("plant-button")].forEach((button, i)=>button.addEventListener('click', () => selectPlant(plantNames[i], prices[i])));
+const plantMap={};
+plantNames.forEach((n, i)=>plantMap[n]=prices[i]);
 
 const levelWaves = [4,  6,  8,  10, 8,  10, 20, 10, 20, 20,
 					10, 20, 10, 20, 10, 10, 20, 10, 20, 20,
@@ -288,4 +377,3 @@ if(level>19&&level<40)
 	plants.push([]);
 createGrid();
 resetGrid();
-gameLoop();

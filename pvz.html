@@ -92,20 +92,14 @@
     <!-- Plant selection buttons -->
 	
     <div class="plant-buttons-container">
-		<div class="plant-buttons">
-			50<img src="sunflower.png" id="sunflower-button" class="plant-button"/>
-			100<img src="peashooter.png" id="peashooter-button" class="plant-button"/>
-			150<img src="cherrybomb.png" id="cherrybomb-button" class="plant-button"/>
-			50<img src="wallnut.png" id="wallnut-button" class="plant-button"/>
-			25<img src="potatomine.png" id="potatomine-button" class="plant-button"/>
-			175<img src="snowpea.png" id="snowpea-button" class="plant-button"/>
-			150<img src="chomper.png" id="chomper-button" class="plant-button"/>
-			200<img src="repeater.png" id="repeater-button" class="plant-button"/>
+		<div class="plant-buttons" id="plantButtons">
 		</div>
 	</div>
     
     <!-- Grid container -->
     <div class="grid-container" id="grid"></div>
+	<div class="grid-container" id="availablePlants"></div>
+	<button id="startButton" onclick="startSpawningZombies()">Start!</button>
 	<script src="Plant.js"></script>
 	<script src="Zombie.js"></script>
 	<script src="Bullet.js"></script>
